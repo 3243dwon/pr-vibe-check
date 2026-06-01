@@ -1,159 +1,100 @@
-# 🚀 Launch kit
+# 🚀 Launch kit — pr-vibe-check
 
-Copy-paste assets for shipping **PR Vibe Check**. Tweak the voice to taste.
+Copy-paste assets for shipping the Gen Z vibe checker. Tune the voice to taste.
+
+> Part of a 4-repo launch (pr-vibe-check · vibe-translator · forensic-read · clear-eye). pr-vibe-check is the **lead/viral** play — funniest, novel category, lowest barrier to "share this."
 
 ---
 
-## 1. The demo GIF (do this first — it's 80% of the conversion)
+## 1. The demo GIF (do this first — it's 80% of conversion)
 
-A 6–8 second loop of a PR getting its vibe comment is the single highest-leverage asset. Recipe:
+A 6–8s loop of a PR getting roasted is the single highest-leverage asset.
 
-1. Make a throwaway repo, add `.github/workflows/vibe-check.yml` (the quick-start snippet).
-2. Open one **great** PR (good title, description, tests, `Closes #1`) and one **cursed** PR (`fix`, empty body, huge diff).
-3. Screen-record the PR page as the comment appears and the score lands. Tools: [Kap](https://getkap.co) or [LICEcap](https://www.cockos.com/licecap/) (both export GIF directly).
-4. Keep it **under 8s**, crop tight to the comment, end on the ✨ score.
-5. Save as `docs/demo.gif`, then uncomment the image line near the top of `README.md`.
+1. Throwaway repo, add the workflow + an `ANTHROPIC_API_KEY` secret.
+2. Open one **mid** PR (`fix`, no description, huge diff) and watch a `brutal` vibe check land.
+3. Record with [Kap](https://getkap.co) / [LICEcap](https://www.cockos.com/licecap/). Crop tight to the comment, end on the rating.
+4. Save as `docs/demo.gif`, uncomment the image line near the top of the README.
 
-> Pro tip: lead with the **cursed → fixed** transition. "Watch a 💀 PR become ✨" is more shareable than a single happy path.
+> Lead with a **brutal** roast — "watch Claude ratio a bad PR" is more shareable than a polite one.
 
-A static fallback already exists at [docs/example-comment.md](docs/example-comment.md) — generated live by `npm run test:local`.
+Ready-made stills are committed (see §2), and a static example lives at [docs/example-comment.md](docs/example-comment.md).
 
-### Ready-made card images
+---
 
-Three 1280×640 PNGs are committed and ready to drop into the PH gallery, a tweet, or the repo's social preview (each has an editable `.svg` beside it):
+## 2. Ready-made card images
+
+Three 1280×640 PNGs (each with an editable `.svg`) — drop into the PH gallery, a tweet, or the repo's social preview:
 
 | Asset | Use |
 | :-- | :-- |
-| [docs/social-card.png](docs/social-card.png) | Default hero (dark). Set it at **Settings → General → Social preview**. |
-| [docs/social-card-cursed.png](docs/social-card-cursed.png) | The "before" — a 💀 18/100 PR. Pair with the default for a before→after slide. |
-| [docs/social-card-light.png](docs/social-card-light.png) | Cream/light theme, for light backgrounds. |
+| [docs/social-card.png](docs/social-card.png) | Default hero (a `normal` 7/10 roast). Set at **Settings → Social preview**. |
+| [docs/social-card-cursed.png](docs/social-card-cursed.png) | A `brutal` 2/10 roast — the "before". |
+| [docs/social-card-light.png](docs/social-card-light.png) | Cream/light theme. |
 
-To re-export after editing an `.svg`: open it in any browser and screenshot at 1280×640, or use a converter (`rsvg-convert -w 1280 -h 640`, or `npx sharp-cli -i card.svg -o card.png`).
-
----
-
-## 2. Badges (already wired into the README)
-
-The shareable one for *other people's* repos:
+Badge for other people's repos:
 
 ```markdown
-[![vibe checked](https://img.shields.io/badge/PRs-vibe%20checked-purple)](https://github.com/3243dwon/pr-vibe-check)
+[![vibe checked](https://img.shields.io/badge/PRs-vibe%20checked-ff69b4)](https://github.com/3243dwon/pr-vibe-check)
 ```
-
-Put "add this badge to your repo" in your launch post — badges are free distribution.
 
 ---
 
 ## 3. Product Hunt
 
-**Name:** PR Vibe Check
-
-**Tagline** (≤60 chars):
-> Give every pull request a vibe score — and know why ✨
-
-**Alternates:**
-> A friendly 0–100 vibe score for every pull request
-> Vibe-check your PRs before your teammates do
+**Tagline (≤60):** `A Gen Z code reviewer that vibe-checks your PRs 🔥`
 
 **Description:**
-> PR Vibe Check is a GitHub Action that scores every pull request 0–100 on the stuff reviewers actually care about: a clear title, a real description, small size, a tight blast radius, tests, and a linked issue. It drops one self-updating comment explaining the score — playfully.
->
-> Zero config and no API key to start. Want more? Flip on AI mode and Claude adds a one-line "vibe read" of the diff. Optionally gate merges with `fail-under`.
->
-> It's not a replacement for human review — it's the friendly nudge that makes the human review easier.
+> Your CI checks types. It doesn't check *vibes*. PR Vibe Check is a GitHub Action that reads your pull request with Claude and posts one honest, very online comment: THE VIBE, SLAY MOMENTS, L MOMENTS, a verdict, and a rating out of 10. The technical read is real — the Gen Z wrapper just makes people actually read it. Three severities: soft, normal, brutal.
 
-**First comment (from you, the maker):**
-> Hey Product Hunt! 👋
->
-> I kept opening PRs titled "fix" with no description and a 2,000-line diff, then wondering why review took forever. So I built the nudge I needed: a GitHub Action that gives each PR a 0–100 *vibe score* and tells you exactly why.
->
-> It's free and zero-config — paste 6 lines of YAML and you're done. There's an optional AI mode (Claude reads the diff) if you want a vibe read too.
->
-> The whole thing is open source and MIT. I'd love feedback on the scoring rubric — what would *you* reward or punish in a PR? 💜
+**First comment (maker):**
+> Hey PH 👋 I kept opening PRs titled "fix" with a 2,000-line diff and no description, so I built the code reviewer I deserved: it roasts (or hypes) your PR with Claude. `severity: brutal` is not for the weak. Free + open source, ~a cent per check. Roast my repo in the comments 🔥
 
-**Topics:** Developer Tools · GitHub · Open Source · Productivity · Artificial Intelligence
-
-**Gallery captions:**
-1. "One comment. One score. Instant context." *(the demo GIF)*
-2. "Six checks, 100 points — small, tested, well-described PRs win."
-3. "Optional AI mode: Claude reads the diff and gives a vibe read."
-4. "Gate merges with `fail-under` — or just vibe."
-
-**Launch timing:** Post 12:01am PT (Product Hunt's day starts then). Tuesday–Thursday convert best. Line up 5–10 people to check it out in the first hour.
+**Topics:** Developer Tools · GitHub · AI · Open Source
 
 ---
 
 ## 4. Show HN
 
-**Title:**
-> Show HN: PR Vibe Check – a GitHub Action that scores your pull requests 0–100
+**Title:** `Show HN: PR Vibe Check – a Gen Z code reviewer for your PRs, powered by Claude`
 
 **Body:**
-> I built a GitHub Action that posts a single comment on each PR with a 0–100 "vibe score" — based on title clarity, description, diff size, files touched, tests, and whether an issue is linked.
+> A GitHub Action that posts a vibe check on each PR — THE VIBE / SLAY MOMENTS / L MOMENTS / verdict / rating. The slang is a wrapper; under it Claude actually reads the diff and the technical observations are real. Severity is configurable (soft/normal/brutal). It updates a single comment instead of spamming. ~$0.002–0.02 per PR. Open source, MIT.
 >
-> It's zero-config (no API key) for the rule-based score. There's an optional mode where Claude reads the diff and adds a short verdict. You can also fail the check below a threshold to gently gate merges.
->
-> The scoring is deliberately simple and transparent (six checks, source in `src/scorer.js`). I'd genuinely like to argue about the rubric — what belongs in a "good PR" heuristic, and what's noise?
->
-> Code + rubric: https://github.com/3243dwon/pr-vibe-check
-
-> HN note: be ready to defend the rubric and respond fast in the first 2 hours. Lead with the source link, not marketing.
+> Repo: https://github.com/3243dwon/pr-vibe-check
 
 ---
 
 ## 5. X / Twitter thread
 
-**1/**
-> Every PR titled "fix" with no description and a 1,500-line diff is a tiny act of violence against your reviewer.
->
-> So I built PR Vibe Check: a GitHub Action that scores each PR 0–100 and tells you why. ✨
->
-> [demo gif]
-
-**2/**
-> Zero config. No API key. 6 lines of YAML:
->
-> ```yaml
-> - uses: 3243dwon/pr-vibe-check@v1
-> ```
->
-> Open a PR → get a vibe comment. That's it.
-
-**3/**
-> The score is 6 transparent checks: title, description, size, focus, tests, linked issue.
->
-> 💀 Cursed → ✨ Immaculate. No black box — the rubric is ~120 lines of plain JS.
-
-**4/**
-> Want magic? Flip on AI mode and Claude reads the diff for a one-line vibe read.
->
-> Want discipline? `fail-under: 50` blocks merges below a score.
-
-**5/**
-> Free, open source, MIT.
->
-> ⭐ https://github.com/3243dwon/pr-vibe-check
->
-> Tell me what your rubric would reward 👇
+1. your CI checks types. it doesn't check vibes. so I fixed that 🔥 [GIF]
+2. PR Vibe Check reads your PR with Claude and posts: THE VIBE, 🔥 SLAY MOMENTS, 💀 L MOMENTS, a verdict, a rating /10. the roast is funny, the technical read is real.
+3. 6 lines of YAML + an API key. `severity: soft | normal | brutal`. brutal is not for the weak.
+4. free, open source, ~a cent a check ⭐ https://github.com/3243dwon/pr-vibe-check
 
 ---
 
-## 6. Reddit (r/github, r/programming, r/devops)
+## 6. Reddit
 
-**Title:**
-> I made a free GitHub Action that gives your pull requests a 0–100 "vibe score"
-
-**Body:** short version of the Show HN post + the demo GIF. Reddit hates anything that smells like marketing — lead with the rubric and the fact that it's open source, ask for critique of the scoring.
+- **r/programmerhumor** — lead with a screenshot of a brutal roast (this is the home-run subreddit for this repo)
+- **r/programming, r/ClaudeAI, r/SideProject** — the Show HN copy, lead with the GIF, mention it's open source
 
 ---
 
-## 7. Launch-day checklist
+## 7. Hook lines (steal these)
+
+- "Your CI checks types. Does it check vibes?"
+- "Claude read your PR. It has notes. 💀"
+- "`severity: brutal` is not for the weak."
+
+---
+
+## 8. Launch-day checklist
 
 - [ ] Record `docs/demo.gif`, uncomment it in the README
-- [ ] `npm run all`, commit `dist/`, tag `v1` + `v1.0.0`, push
-- [ ] Publish to the [GitHub Marketplace](https://docs.github.com/actions/sharing-automations/publishing-actions-in-github-marketplace) (a release with `action.yml` enables the "Publish" button)
-- [ ] Add the "vibe checked" badge to this repo and 2–3 of your other repos
-- [ ] Add 3–4 gallery images + the GIF to the Product Hunt draft
-- [ ] Schedule the PH post for 12:01am PT, Tue–Thu
-- [ ] Post Show HN the same morning; cross-post to Reddit
+- [ ] `npm run all`, commit `dist/`, merge the release PR (tags `v1`)
+- [ ] Publish to the [Marketplace](https://docs.github.com/actions/sharing-automations/publishing-actions-in-github-marketplace) from the release
+- [ ] Upload `docs/social-card.png` as the repo social preview
+- [ ] Schedule PH for 12:01am PT (Tue–Thu); post Show HN same morning; r/programmerhumor screenshot
 - [ ] Reply to every comment in the first 2 hours
+
+*Build was the easy part. Distribution is the product.*

@@ -29922,46 +29922,20 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7343:
+/***/ 8653:
 /***/ ((module) => {
 
 "use strict";
 
 
-// Optional "AI vibe read" — sends the diff to Claude and asks for a short,
-// human verdict. Uses native fetch so we don't pull in an SDK. fetchImpl is
-// injectable purely so tests can run without a network or API key.
+// Thin Anthropic Messages API client over native fetch — no SDK dependency, so
+// the bundle stays small and the action's only deps are the GitHub toolkit.
+// fetchImpl is injectable purely so tests run without a network or API key.
 
-const MAX_DIFF_CHARS = 12000
-
-const SYSTEM = [
-  'You are "PR Vibe Check", a witty but genuinely helpful senior engineer.',
-  'You read a pull request diff and give it a quick "vibe" read.',
-  'Be concise, kind, and specific. One light joke max.',
-  'Respond with ONLY a JSON object, no markdown fence, of the exact shape:',
-  '{"score": <integer 0-100>, "vibe": "<=8 word verdict", "summary": "2-3 sentence read"}'
-].join(' ')
-
-function extractJson(text) {
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start === -1 || end === -1 || end < start) throw new Error('no JSON object in model response')
-  return JSON.parse(text.slice(start, end + 1))
-}
-
-/**
- * @param {object} args
- * @param {string} args.diff      unified diff text
- * @param {string} args.apiKey    Anthropic API key
- * @param {string} args.model     model id
- * @param {function} [args.fetchImpl] defaults to global fetch
- * @returns {Promise<{score:number, vibe:string, summary:string}>}
- */
-async function aiVibe({ diff, apiKey, model, fetchImpl = globalThis.fetch }) {
+async function requestVibe({ apiKey, model, system, user, maxTokens = 1024, fetchImpl = globalThis.fetch }) {
   if (!apiKey) throw new Error('missing Anthropic API key')
   if (typeof fetchImpl !== 'function') throw new Error('no fetch implementation available')
 
-  const truncated = String(diff || '').slice(0, MAX_DIFF_CHARS)
   const res = await fetchImpl('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -29970,10 +29944,10 @@ async function aiVibe({ diff, apiKey, model, fetchImpl = globalThis.fetch }) {
       'content-type': 'application/json'
     },
     body: JSON.stringify({
-      model: model || 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: `Here is the PR diff:\n\n${truncated}` }]
+      model: model || 'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content: user }]
     })
   })
 
@@ -29983,94 +29957,16 @@ async function aiVibe({ diff, apiKey, model, fetchImpl = globalThis.fetch }) {
   }
 
   const data = await res.json()
-  const text = (data.content || []).map((b) => b.text || '').join('').trim()
-  const parsed = extractJson(text)
-  const score = Math.max(0, Math.min(100, Math.round(Number(parsed.score))))
-  return {
-    score: Number.isFinite(score) ? score : 50,
-    vibe: String(parsed.vibe || 'Vibes unclear').slice(0, 120),
-    summary: String(parsed.summary || '').slice(0, 600)
-  }
+  const text = (data.content || [])
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join('')
+    .trim()
+  if (!text) throw new Error('empty response from Claude')
+  return text
 }
 
-module.exports = { aiVibe, MAX_DIFF_CHARS }
-
-
-/***/ }),
-
-/***/ 3220:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-const { rate, meterFor } = __nccwpck_require__(8729)
-
-// Hidden marker so the action can find and update its own comment instead of
-// spamming a new one on every push.
-const MARKER = '<!-- pr-vibe-check:do-not-remove -->'
-
-function badgeUrl(score, rating) {
-  const color = score >= 75 ? 'brightgreen' : score >= 50 ? 'yellow' : score >= 25 ? 'orange' : 'red'
-  const label = encodeURIComponent('vibe check')
-  const msg = encodeURIComponent(`${score}/100 · ${rating}`)
-  return `https://img.shields.io/badge/${label}-${msg}-${color}`
-}
-
-function renderChecks(checks) {
-  const rows = checks
-    .map((c) => `| ${c.icon} ${c.label} | \`${c.points}/${c.max}\` | ${c.note} |`)
-    .join('\n')
-  return ['| Check | Score | Notes |', '| :-- | :--: | :-- |', rows].join('\n')
-}
-
-/**
- * Build the PR comment markdown.
- * @param {object} hygiene result from scoreVibe()
- * @param {object} [opts]
- * @param {object|null} [opts.ai] result from aiVibe(): {score, vibe, summary}
- * @param {string} [opts.mode] 'hygiene' | 'ai' | 'both'
- */
-function renderComment(hygiene, opts = {}) {
-  const { ai = null, mode = 'hygiene' } = opts
-  // In pure "ai" mode the AI score is the headline; otherwise hygiene leads.
-  const headline = mode === 'ai' && ai ? rate(ai.score) : { rating: hygiene.rating, emoji: hygiene.emoji }
-  const headScore = mode === 'ai' && ai ? ai.score : hygiene.score
-  const meter = mode === 'ai' && ai ? meterFor(ai.score) : hygiene.meter
-
-  const parts = []
-  parts.push(MARKER)
-  parts.push(`## ${headline.emoji} PR Vibe Check — ${headline.rating}`)
-  parts.push('')
-  parts.push(`<samp>${meter}</samp>  **${headScore}/100**`)
-  parts.push('')
-  parts.push(`![vibe](${badgeUrl(headScore, headline.rating)})`)
-  parts.push('')
-
-  if (mode !== 'ai') {
-    parts.push(renderChecks(hygiene.checks))
-    parts.push('')
-  }
-
-  if (ai) {
-    parts.push('### 🤖 AI vibe read')
-    parts.push('')
-    parts.push(`> **${ai.vibe}**`)
-    parts.push('>')
-    parts.push(`> ${ai.summary}`)
-    if (mode === 'both') parts.push(`>\n> _AI score: ${ai.score}/100 · hygiene score: ${hygiene.score}/100_`)
-    parts.push('')
-  }
-
-  parts.push('---')
-  parts.push(
-    '<sub>🔮 Vibes measured by [pr-vibe-check](https://github.com/3243dwon/pr-vibe-check). ' +
-      'Not a substitute for a real review — just a friendly nudge.</sub>'
-  )
-  return parts.join('\n')
-}
-
-module.exports = { renderComment, badgeUrl, MARKER }
+module.exports = { requestVibe }
 
 
 /***/ }),
@@ -30081,12 +29977,11 @@ module.exports = { renderComment, badgeUrl, MARKER }
 "use strict";
 
 
-const { scoreVibe } = __nccwpck_require__(8729)
-const { renderComment, MARKER } = __nccwpck_require__(3220)
-const { aiVibe } = __nccwpck_require__(7343)
+const { buildSystem, buildUser, renderComment, extractRating, MARKER } = __nccwpck_require__(7153)
+const { requestVibe } = __nccwpck_require__(8653)
 
 // Find a previous vibe-check comment (by hidden marker) and update it, else
-// create a fresh one. Keeps the PR thread clean across pushes.
+// create a fresh one — keeps the PR thread clean across pushes.
 async function upsertComment(octokit, { owner, repo, number, body }) {
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {
     owner,
@@ -30104,13 +29999,8 @@ async function upsertComment(octokit, { owner, repo, number, body }) {
 }
 
 /**
- * Action entrypoint. All toolkit dependencies are injectable so the action can
- * be exercised locally with mocks (see test/local-run.js).
- * @param {object} [deps]
- * @param {object} [deps.core]    @actions/core (mock in tests)
- * @param {object} [deps.github]  @actions/github (mock in tests)
- * @param {object} [deps.octokit] pre-built octokit (mock in tests)
- * @param {function} [deps.fetch] fetch impl for the AI call
+ * Action entrypoint. Toolkit dependencies are injectable so the action can be
+ * exercised locally with mocks (see test/local-run.js).
  */
 async function run(deps = {}) {
   const core = deps.core || __nccwpck_require__(7484)
@@ -30121,20 +30011,23 @@ async function run(deps = {}) {
     const ctx = github.context
     const pr = ctx.payload && ctx.payload.pull_request
     if (!pr) {
-      core.info('No pull_request in the event payload — nothing to vibe-check. Skipping.')
+      core.info('Not a PR event — skipping vibe check bestie.')
       return
     }
 
+    const apiKey = core.getInput('anthropic-api-key', { required: true })
     const token = core.getInput('github-token')
-    const mode = (core.getInput('mode') || 'hygiene').toLowerCase()
-    const failUnder = core.getInput('fail-under')
+    const severity = (core.getInput('severity') || 'normal').toLowerCase()
+    const model = core.getInput('model') || 'claude-sonnet-4-6'
     const shouldComment = (core.getInput('comment') || 'true').toLowerCase() !== 'false'
 
     const { owner, repo } = ctx.repo
     const number = pr.number
     const octokit = deps.octokit || github.getOctokit(token)
 
-    // Pull fresh PR data + file list (the webhook payload can be stale).
+    core.info(`Vibe checking PR #${number}: "${pr.title}" (severity: ${severity}, model: ${model})`)
+
+    // Pull fresh PR data + file patches (the webhook payload can be stale).
     const prData = (await octokit.rest.pulls.get({ owner, repo, pull_number: number })).data
     const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
       owner,
@@ -30143,47 +30036,20 @@ async function run(deps = {}) {
       per_page: 100
     })
 
-    const hygiene = scoreVibe({
-      title: prData.title,
-      body: prData.body,
-      additions: prData.additions,
-      deletions: prData.deletions,
-      changedFiles: prData.changed_files,
-      commits: prData.commits,
-      files: files.map((f) => ({ filename: f.filename })),
-      labels: (prData.labels || []).map((l) => l.name),
-      isDraft: prData.draft
-    })
+    const system = buildSystem(severity)
+    const user = buildUser(
+      {
+        title: prData.title,
+        body: prData.body,
+        user: prData.user,
+        additions: prData.additions,
+        deletions: prData.deletions
+      },
+      files
+    )
 
-    let ai = null
-    if (mode === 'ai' || mode === 'both') {
-      const apiKey = core.getInput('anthropic-api-key')
-      if (!apiKey) {
-        core.warning(`mode="${mode}" but no anthropic-api-key provided — skipping the AI read.`)
-      } else {
-        try {
-          const diff = (
-            await octokit.rest.pulls.get({
-              owner,
-              repo,
-              pull_number: number,
-              mediaType: { format: 'diff' }
-            })
-          ).data
-          ai = await aiVibe({
-            diff: String(diff),
-            apiKey,
-            model: core.getInput('ai-model'),
-            fetchImpl
-          })
-        } catch (err) {
-          core.warning(`AI vibe read failed (${err.message}) — falling back to hygiene only.`)
-        }
-      }
-    }
-
-    const headScore = mode === 'ai' && ai ? ai.score : hygiene.score
-    const body = renderComment(hygiene, { ai, mode })
+    const vibe = await requestVibe({ apiKey, model, system, user, fetchImpl })
+    const body = renderComment(vibe, severity)
 
     if (shouldComment) {
       const result = await upsertComment(octokit, { owner, repo, number, body })
@@ -30192,10 +30058,9 @@ async function run(deps = {}) {
       core.info('comment=false — skipping PR comment.')
     }
 
-    core.setOutput('score', String(headScore))
-    core.setOutput('rating', hygiene.rating)
-    core.setOutput('emoji', hygiene.emoji)
-    core.info(`Vibe: ${hygiene.emoji} ${hygiene.rating} (${headScore}/100)`)
+    const rating = extractRating(vibe)
+    if (rating != null) core.setOutput('rating', String(rating))
+    core.setOutput('severity', severity)
 
     if (typeof core.summary?.addRaw === 'function') {
       try {
@@ -30205,15 +30070,13 @@ async function run(deps = {}) {
       }
     }
 
-    if (failUnder !== '' && failUnder != null && Number(headScore) < Number(failUnder)) {
-      core.setFailed(`Vibe score ${headScore} is below fail-under=${failUnder}.`)
-    }
+    core.info('Vibe check posted. We ate. ✅')
   } catch (err) {
-    core.setFailed(err && err.message ? err.message : String(err))
+    core.setFailed(`Vibe check bricked (genuine L): ${err && err.message ? err.message : err}`)
   }
 }
 
-// Only auto-run when invoked as the action entrypoint, never when imported by tests.
+// Only auto-run as the action entrypoint, never when imported by tests.
 if (require.main === require.cache[eval('__filename')]) {
   run()
 }
@@ -30223,135 +30086,113 @@ module.exports = { run, upsertComment }
 
 /***/ }),
 
-/***/ 8729:
+/***/ 7153:
 /***/ ((module) => {
 
 "use strict";
 
 
-// Pure, dependency-free PR hygiene scorer.
-// Takes a normalized PR object and returns a vibe result. No I/O, no SDKs —
-// which is exactly why it's so easy to unit-test and to run locally.
+// Pure, dependency-free vibe-check building blocks: the persona prompt, the
+// diff summariser, the comment renderer, and the rating parser. No I/O lives
+// here, which is exactly what makes it trivial to unit-test.
 
-const CODE_EXTENSIONS =
-  /\.(js|jsx|ts|tsx|mjs|cjs|py|rb|go|rs|java|kt|swift|c|h|cc|cpp|hpp|cs|php|scala|ex|exs|dart|vue|svelte)$/i
-
-const TEST_PATTERNS =
-  /(^|\/)(__tests__|tests?|spec|e2e)\//i
-
-const TEST_FILE = /(\.test\.|\.spec\.|_test\.|_spec\.|\.feature$)/i
-
-const GENERIC_TITLE =
-  /^(wip|update|updates|fix|fixes|fixed|changes|change|stuff|misc|temp|tmp|test|asdf|.|patch|minor|cleanup|refactor|tweaks?)\.?$/i
-
-const ISSUE_REF = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b[^\n]*#\d+|#\d+/i
-
-const RATINGS = [
-  { min: 90, rating: 'Immaculate vibes', emoji: '✨' },
-  { min: 75, rating: 'Solid vibes', emoji: '😎' },
-  { min: 50, rating: 'Mixed vibes', emoji: '🤔' },
-  { min: 25, rating: 'Sus vibes', emoji: '😬' },
-  { min: 0, rating: 'Cursed vibes', emoji: '💀' }
-]
-
-function rate(score) {
-  return RATINGS.find((r) => score >= r.min) || RATINGS[RATINGS.length - 1]
+const SEVERITY_PROMPTS = {
+  soft: 'Be encouraging and hype them up, but still keep it real with Gen Z slang. Positive energy.',
+  normal: 'Be honest and funny. Roast when necessary, praise when deserved. No cap.',
+  brutal: 'ZERO filter. Absolutely ruthless. Real ones only. Make them feel it.'
 }
 
-function meterFor(score) {
-  const filled = Math.round((Math.max(0, Math.min(100, score)) / 100) * 10)
-  return '▰'.repeat(filled) + '▱'.repeat(10 - filled)
+// Hidden marker so we update our own comment instead of spamming a new one on
+// every push (an upgrade over posting fresh each time).
+const MARKER = '<!-- pr-vibe-check:do-not-remove -->'
+
+function severityNote(severity) {
+  return SEVERITY_PROMPTS[severity] || SEVERITY_PROMPTS.normal
 }
 
-function check(label, points, max, note) {
-  const ratio = max === 0 ? 1 : points / max
-  const status = ratio >= 0.85 ? 'good' : ratio >= 0.4 ? 'warn' : 'bad'
-  const icon = status === 'good' ? '✅' : status === 'warn' ? '⚠️' : '❌'
-  return { label, points, max, note, status, icon }
+function buildSystem(severity) {
+  return `You are the most chronically online, terminally Gen Z code reviewer on the internet.
+Your entire personality is built around giving PRs a VIBE CHECK.
+${severityNote(severity)}
+You use slang naturally — no cap, lowkey, based, rent free, understood the assignment, fr fr, slay, it's giving, the audacity, bestie, bussin, not it, main character energy, ate and left no crumbs, caught in 4K, mid, ratio'd, etc.
+You are funny but your technical observations are REAL and ACCURATE. The slang is the wrapper, the substance is the gift.`
 }
 
-function scoreTitle(title) {
-  const t = (title || '').trim()
-  if (!t) return check('Title', 0, 20, 'No title at all. Bold strategy.')
-  if (GENERIC_TITLE.test(t)) return check('Title', 5, 20, `"${t}" tells reviewers nothing.`)
-  if (t.length < 10) return check('Title', 11, 20, 'A little terse — add a few words of intent.')
-  if (t.length > 72) return check('Title', 14, 20, 'Title novella detected. Trim to a headline.')
-  return check('Title', 20, 20, 'Clear and scannable.')
+function summarizeDiff(files, { maxFiles = 20, perFile = 600, total = 12000 } = {}) {
+  return (files || [])
+    .slice(0, maxFiles)
+    .map((f) => {
+      const patch = f.patch ? f.patch.slice(0, perFile) : '(binary / no patch)'
+      return `### ${f.filename}  (+${f.additions} / -${f.deletions})\n${patch}`
+    })
+    .join('\n\n')
+    .slice(0, total)
 }
 
-function scoreDescription(body) {
-  const b = (body || '').trim()
-  if (!b) return check('Description', 0, 20, 'Empty description. What does this even do?')
-  if (b.length < 30) return check('Description', 8, 20, 'Barely a sentence — what & why, please.')
-  const rich = /(^|\n)\s*[-*] \[[ x]\]/i.test(b) || /(^|\n)#{1,3}\s/.test(b)
-  if (rich) return check('Description', 20, 20, 'Thorough write-up with structure. Chef’s kiss.')
-  return check('Description', 16, 20, 'Decent context. A checklist would top it off.')
+function buildUser(pr, files) {
+  const body = (pr.body || '').trim()
+  return `Vibe check this pull request. Be a legend about it.
+
+**PR DEETS:**
+- Title: ${pr.title}
+- Description: ${body || '(no description — already a red flag bestie 🚩)'}
+- Author: @${(pr.user && pr.user.login) || 'unknown'}
+- Files changed: ${(files || []).length}
+- Lines added: +${pr.additions ?? '?'}
+- Lines deleted: -${pr.deletions ?? '?'}
+
+**DIFF:**
+${summarizeDiff(files)}
+
+---
+
+Structure your vibe check EXACTLY like this (use the headers, keep it snappy):
+
+**✨ THE VIBE**
+[One punchy sentence on what this PR is giving. Make it hit.]
+
+**🔥 SLAY MOMENTS**
+[2–3 bullets. What they actually did well. Be specific, not vague.]
+
+**💀 L MOMENTS**
+[2–3 bullets. What flopped, what needs work, what you clocked immediately. Be real.]
+
+**🎯 VERDICT**
+[W / L / Mid] — [One spicy closing sentence. Make it memorable.]
+
+**📊 VIBE RATING: X/10** [One emoji that perfectly captures it]
+
+Keep it under 380 words. Every word should earn its place.`
 }
 
-function scoreSize(additions, deletions) {
-  const lines = (additions || 0) + (deletions || 0)
-  if (lines === 0) return check('Size', 6, 20, 'No line changes detected.')
-  if (lines <= 250) return check('Size', 20, 20, `${lines} lines — reviewable in one sitting.`)
-  if (lines <= 600) return check('Size', 14, 20, `${lines} lines — getting chunky.`)
-  if (lines <= 1000) return check('Size', 8, 20, `${lines} lines — consider splitting this up.`)
-  return check('Size', 4, 20, `${lines} lines — absolute unit. Reviewers weep.`)
+function renderComment(vibeText, severity) {
+  return [
+    MARKER,
+    '## 🔍 PR Vibe Check™',
+    '',
+    String(vibeText || '').trim(),
+    '',
+    '---',
+    `*no cap powered by [pr-vibe-check](https://github.com/3243dwon/pr-vibe-check) × Claude · severity: \`${severity}\`*`
+  ].join('\n')
 }
 
-function scoreFocus(changedFiles) {
-  const f = changedFiles || 0
-  if (f === 0) return check('Focus', 8, 15, 'No files reported.')
-  if (f <= 10) return check('Focus', 15, 15, `${f} files — tightly scoped.`)
-  if (f <= 25) return check('Focus', 10, 15, `${f} files — a broad sweep.`)
-  if (f <= 50) return check('Focus', 6, 15, `${f} files — that's a lot of surface area.`)
-  return check('Focus', 3, 15, `${f} files — blast radius approaching orbital.`)
+function extractRating(vibeText) {
+  const m = String(vibeText || '').match(/VIBE RATING:\s*(\d{1,2})\s*\/\s*10/i)
+  if (!m) return null
+  const n = Number(m[1])
+  return n >= 0 && n <= 10 ? n : null
 }
 
-function scoreTests(files) {
-  const names = (files || []).map((f) => f.filename || '')
-  const hasTests = names.some((n) => TEST_PATTERNS.test(n) || TEST_FILE.test(n))
-  if (hasTests) return check('Tests', 15, 15, 'Tests included. We love to see it.')
-  const codeFiles = names.filter((n) => CODE_EXTENSIONS.test(n))
-  if (codeFiles.length === 0) {
-    return check('Tests', 11, 15, 'Docs/config PR — tests optional here.')
-  }
-  return check('Tests', 0, 15, 'Code changed but no tests touched. Living dangerously.')
+module.exports = {
+  SEVERITY_PROMPTS,
+  buildSystem,
+  buildUser,
+  summarizeDiff,
+  renderComment,
+  extractRating,
+  MARKER
 }
-
-function scoreContext(title, body) {
-  const text = `${title || ''}\n${body || ''}`
-  if (ISSUE_REF.test(text)) return check('Context', 10, 10, 'Linked to an issue. Traceable.')
-  return check('Context', 0, 10, 'No issue reference (e.g. "Closes #123").')
-}
-
-/**
- * Score a pull request's hygiene "vibes".
- * @param {object} pr
- * @param {string} pr.title
- * @param {string} pr.body
- * @param {number} pr.additions
- * @param {number} pr.deletions
- * @param {number} pr.changedFiles
- * @param {number} [pr.commits]
- * @param {Array<{filename:string}>} [pr.files]
- * @param {string[]} [pr.labels]
- * @param {boolean} [pr.isDraft]
- * @returns {{score:number, rating:string, emoji:string, meter:string, checks:Array}}
- */
-function scoreVibe(pr = {}) {
-  const checks = [
-    scoreTitle(pr.title),
-    scoreDescription(pr.body),
-    scoreSize(pr.additions, pr.deletions),
-    scoreFocus(pr.changedFiles),
-    scoreTests(pr.files),
-    scoreContext(pr.title, pr.body)
-  ]
-  const score = Math.round(checks.reduce((sum, c) => sum + c.points, 0))
-  const { rating, emoji } = rate(score)
-  return { score, rating, emoji, meter: meterFor(score), checks }
-}
-
-module.exports = { scoreVibe, rate, meterFor }
 
 
 /***/ }),

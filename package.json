@@ -1,7 +1,7 @@
 {
   "name": "pr-vibe-check",
   "version": "1.0.0",
-  "description": "Vibe-check your pull requests. A GitHub Action that scores PR hygiene (and optionally reads the diff with Claude), then drops a playful score comment. ✨",
+  "description": "Gen Z vibe check for your pull requests, powered by Claude. No cap. ✨",
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/index.js -o dist --license licenses.txt",
@@ -15,10 +15,10 @@
     "pull-request",
     "code-review",
     "vibe-check",
-    "pr-quality",
-    "ci",
+    "ai",
     "claude",
-    "anthropic"
+    "anthropic",
+    "gen-z"
   ],
   "author": "3243dwon",
   "license": "MIT",

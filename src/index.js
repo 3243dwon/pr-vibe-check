@@ -1,11 +1,10 @@
 'use strict'
 
-const { scoreVibe } = require('./scorer')
-const { renderComment, MARKER } = require('./comment')
-const { aiVibe } = require('./ai')
+const { buildSystem, buildUser, renderComment, extractRating, MARKER } = require('./vibe')
+const { requestVibe } = require('./anthropic')
 
 // Find a previous vibe-check comment (by hidden marker) and update it, else
-// create a fresh one. Keeps the PR thread clean across pushes.
+// create a fresh one — keeps the PR thread clean across pushes.
 async function upsertComment(octokit, { owner, repo, number, body }) {
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {
     owner,
@@ -23,13 +22,8 @@ async function upsertComment(octokit, { owner, repo, number, body }) {
 }
 
 /**
- * Action entrypoint. All toolkit dependencies are injectable so the action can
- * be exercised locally with mocks (see test/local-run.js).
- * @param {object} [deps]
- * @param {object} [deps.core]    @actions/core (mock in tests)
- * @param {object} [deps.github]  @actions/github (mock in tests)
- * @param {object} [deps.octokit] pre-built octokit (mock in tests)
- * @param {function} [deps.fetch] fetch impl for the AI call
+ * Action entrypoint. Toolkit dependencies are injectable so the action can be
+ * exercised locally with mocks (see test/local-run.js).
  */
 async function run(deps = {}) {
   const core = deps.core || require('@actions/core')
@@ -40,20 +34,23 @@ async function run(deps = {}) {
     const ctx = github.context
     const pr = ctx.payload && ctx.payload.pull_request
     if (!pr) {
-      core.info('No pull_request in the event payload — nothing to vibe-check. Skipping.')
+      core.info('Not a PR event — skipping vibe check bestie.')
       return
     }
 
+    const apiKey = core.getInput('anthropic-api-key', { required: true })
     const token = core.getInput('github-token')
-    const mode = (core.getInput('mode') || 'hygiene').toLowerCase()
-    const failUnder = core.getInput('fail-under')
+    const severity = (core.getInput('severity') || 'normal').toLowerCase()
+    const model = core.getInput('model') || 'claude-sonnet-4-6'
     const shouldComment = (core.getInput('comment') || 'true').toLowerCase() !== 'false'
 
     const { owner, repo } = ctx.repo
     const number = pr.number
     const octokit = deps.octokit || github.getOctokit(token)
 
-    // Pull fresh PR data + file list (the webhook payload can be stale).
+    core.info(`Vibe checking PR #${number}: "${pr.title}" (severity: ${severity}, model: ${model})`)
+
+    // Pull fresh PR data + file patches (the webhook payload can be stale).
     const prData = (await octokit.rest.pulls.get({ owner, repo, pull_number: number })).data
     const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
       owner,
@@ -62,47 +59,20 @@ async function run(deps = {}) {
       per_page: 100
     })
 
-    const hygiene = scoreVibe({
-      title: prData.title,
-      body: prData.body,
-      additions: prData.additions,
-      deletions: prData.deletions,
-      changedFiles: prData.changed_files,
-      commits: prData.commits,
-      files: files.map((f) => ({ filename: f.filename })),
-      labels: (prData.labels || []).map((l) => l.name),
-      isDraft: prData.draft
-    })
+    const system = buildSystem(severity)
+    const user = buildUser(
+      {
+        title: prData.title,
+        body: prData.body,
+        user: prData.user,
+        additions: prData.additions,
+        deletions: prData.deletions
+      },
+      files
+    )
 
-    let ai = null
-    if (mode === 'ai' || mode === 'both') {
-      const apiKey = core.getInput('anthropic-api-key')
-      if (!apiKey) {
-        core.warning(`mode="${mode}" but no anthropic-api-key provided — skipping the AI read.`)
-      } else {
-        try {
-          const diff = (
-            await octokit.rest.pulls.get({
-              owner,
-              repo,
-              pull_number: number,
-              mediaType: { format: 'diff' }
-            })
-          ).data
-          ai = await aiVibe({
-            diff: String(diff),
-            apiKey,
-            model: core.getInput('ai-model'),
-            fetchImpl
-          })
-        } catch (err) {
-          core.warning(`AI vibe read failed (${err.message}) — falling back to hygiene only.`)
-        }
-      }
-    }
-
-    const headScore = mode === 'ai' && ai ? ai.score : hygiene.score
-    const body = renderComment(hygiene, { ai, mode })
+    const vibe = await requestVibe({ apiKey, model, system, user, fetchImpl })
+    const body = renderComment(vibe, severity)
 
     if (shouldComment) {
       const result = await upsertComment(octokit, { owner, repo, number, body })
@@ -111,10 +81,9 @@ async function run(deps = {}) {
       core.info('comment=false — skipping PR comment.')
     }
 
-    core.setOutput('score', String(headScore))
-    core.setOutput('rating', hygiene.rating)
-    core.setOutput('emoji', hygiene.emoji)
-    core.info(`Vibe: ${hygiene.emoji} ${hygiene.rating} (${headScore}/100)`)
+    const rating = extractRating(vibe)
+    if (rating != null) core.setOutput('rating', String(rating))
+    core.setOutput('severity', severity)
 
     if (typeof core.summary?.addRaw === 'function') {
       try {
@@ -124,15 +93,13 @@ async function run(deps = {}) {
       }
     }
 
-    if (failUnder !== '' && failUnder != null && Number(headScore) < Number(failUnder)) {
-      core.setFailed(`Vibe score ${headScore} is below fail-under=${failUnder}.`)
-    }
+    core.info('Vibe check posted. We ate. ✅')
   } catch (err) {
-    core.setFailed(err && err.message ? err.message : String(err))
+    core.setFailed(`Vibe check bricked (genuine L): ${err && err.message ? err.message : err}`)
   }
 }
 
-// Only auto-run when invoked as the action entrypoint, never when imported by tests.
+// Only auto-run as the action entrypoint, never when imported by tests.
 if (require.main === module) {
   run()
 }

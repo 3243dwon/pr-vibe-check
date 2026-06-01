@@ -68,8 +68,8 @@ See [.github/workflows/release.yml](.github/workflows/release.yml).
 ## Code notes
 
 - Plain CommonJS, no build step for `src/` other than the `ncc` bundle.
-- Keep `src/scorer.js` **pure** (no I/O) — that's what makes it easy to test. New scoring rules go there with a matching test in `test/scorer.test.js`.
-- I/O and the GitHub/Anthropic calls live in `src/index.js`, behind dependency injection so `test/local-run.js` can mock them.
+- Keep `src/vibe.js` **pure** (no I/O) — prompts, diff summary, comment rendering, rating parsing. That's what makes it easy to test; new logic goes there with a matching test in `test/vibe.test.js`.
+- `src/anthropic.js` is the Claude call (native `fetch`); `src/index.js` wires up GitHub. Both take their dependencies via injection so `test/local-run.js` can mock `@actions/core`, `@actions/github`, and `fetch`.
 
 ## Pull request checklist
 

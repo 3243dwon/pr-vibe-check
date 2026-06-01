@@ -1,9 +1,11 @@
 name: Vibe Check
 
 # Dogfooding: pr-vibe-check vibe-checks its own pull requests.
+# Requires an ANTHROPIC_API_KEY secret on the repo. The job no-ops on PRs from
+# forks (where secrets aren't available) so it never fails a contributor's PR.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -12,11 +14,11 @@ permissions:
 jobs:
   vibe:
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - uses: actions/checkout@v4
-      # Use the local action while developing; switch to 3243dwon/pr-vibe-check@v1 in other repos.
+      # Use the local action while developing; switch to 3243dwon/pr-vibe-check@v1 elsewhere.
       - uses: ./
         with:
-          mode: hygiene
-          # mode: both
-          # anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          severity: normal

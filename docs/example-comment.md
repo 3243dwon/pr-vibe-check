@@ -1,61 +1,74 @@
 # What PR Vibe Check posts
 
-A single, self-updating comment on the PR. Here's the real output from `npm run test:local`.
+One self-updating comment per PR. Tone scales with the `severity` input. Real output shape from `npm run test:local`.
 
 ---
 
-## ✨ An immaculate PR (`hygiene` mode)
+## `severity: normal` — the default
 
-> ## ✨ PR Vibe Check — Immaculate vibes
+> ## 🔍 PR Vibe Check™
 >
-> <samp>▰▰▰▰▰▰▰▰▰▰</samp>  **100/100**
+> **✨ THE VIBE**
+> This PR understood the assignment — clean auth refactor with solid test coverage, genuinely no cap.
 >
-> | Check | Score | Notes |
-> | :-- | :--: | :-- |
-> | ✅ Title | `20/20` | Clear and scannable. |
-> | ✅ Description | `20/20` | Thorough write-up with structure. Chef’s kiss. |
-> | ✅ Size | `20/20` | 150 lines — reviewable in one sitting. |
-> | ✅ Focus | `15/15` | 4 files — tightly scoped. |
-> | ✅ Tests | `15/15` | Tests included. We love to see it. |
-> | ✅ Context | `10/10` | Linked to an issue. Traceable. |
+> **🔥 SLAY MOMENTS**
+> - Extracted the token logic into its own util — fr fr that's how you do it bestie, separation of concerns ate
+> - Test coverage on the edge cases?? You didn't have to go that hard but you did. Respect.
+> - Commit history is actually readable. Unheard of in this economy.
+>
+> **💀 L MOMENTS**
+> - That TODO comment from 2019 is living rent free and needs to be evicted immediately
+> - `handleData` is not a function name, that's a cry for help 💀
+> - 312 lines for a "small fix"?? The audacity is sending me
+>
+> **🎯 VERDICT**
+> W — but the TODO situation has you on thin ice fr
+>
+> **📊 VIBE RATING: 7/10** ✨
 
 ---
 
-## 💀 A cursed PR (`hygiene` mode, `fail-under: 50`)
+## `severity: brutal` — you asked for this
 
-> ## 💀 PR Vibe Check — Cursed vibes
+> ## 🔍 PR Vibe Check™
 >
-> <samp>▰▱▱▱▱▱▱▱▱▱</samp>  **12/100**
+> **✨ THE VIBE**
+> 1,900 lines in one PR titled "fix"? The audacity is genuinely sending me.
 >
-> | Check | Score | Notes |
-> | :-- | :--: | :-- |
-> | ❌ Title | `5/20` | "fix" tells reviewers nothing. |
-> | ❌ Description | `0/20` | Empty description. What does this even do? |
-> | ❌ Size | `4/20` | 2300 lines — absolute unit. Reviewers weep. |
-> | ❌ Focus | `3/15` | 73 files — blast radius approaching orbital. |
-> | ❌ Tests | `0/15` | Code changed but no tests touched. Living dangerously. |
-> | ❌ Context | `0/10` | No issue reference (e.g. "Closes #123"). |
-
-The job also **fails the check** because the score is below `fail-under: 50`.
+> **🔥 SLAY MOMENTS**
+> - It... compiles? We'll take the W where we can find it.
+>
+> **💀 L MOMENTS**
+> - 73 files, zero tests — caught in 4K being reckless bestie
+> - Commit message "fix" is not it. Be so for real.
+> - This diff has main character energy and zero supporting cast (no description)
+>
+> **🎯 VERDICT**
+> L — split this up before someone gets hurt
+>
+> **📊 VIBE RATING: 2/10** 💀
 
 ---
 
-## 🤖 AI + hygiene (`both` mode)
+## `severity: soft` — hype mode
 
-> ## ✨ PR Vibe Check — Immaculate vibes
+> ## 🔍 PR Vibe Check™
 >
-> <samp>▰▰▰▰▰▰▰▰▰</samp>  **88/100**
+> **✨ THE VIBE**
+> First PR and you linked the issue AND wrote tests?? We love to see it bestie 🥹
 >
-> *(hygiene breakdown table…)*
+> **🔥 SLAY MOMENTS**
+> - Small, focused diff — easy to review, you get it
+> - Clear description, future-you says thank you
 >
-> ### 🤖 AI vibe read
+> **💀 L MOMENTS**
+> - One typo in a comment, barely a thing — fix it whenever
 >
-> > **Clean split, well covered**
-> >
-> > Nicely decomposed middleware with matching tests. Double-check the error path on token refresh.
-> >
-> > _AI score: 86/100 · hygiene score: 90/100_
+> **🎯 VERDICT**
+> W — genuinely a clean first contribution, keep going 💪
+>
+> **📊 VIBE RATING: 9/10** 🌟
 
 ---
 
-<sub>🔮 Vibes measured by [pr-vibe-check](https://github.com/3243dwon/pr-vibe-check).</sub>
+<sub>🔍 Vibes measured by [pr-vibe-check](https://github.com/3243dwon/pr-vibe-check) × Claude.</sub>
