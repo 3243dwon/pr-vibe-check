@@ -1,0 +1,43 @@
+{
+  "name": "pr-vibe-check",
+  "version": "1.0.0",
+  "description": "Vibe-check your pull requests. A GitHub Action that scores PR hygiene (and optionally reads the diff with Claude), then drops a playful score comment. ✨",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/index.js -o dist --license licenses.txt",
+    "test": "node --test",
+    "test:local": "node test/local-run.js",
+    "all": "npm run test && npm run build"
+  },
+  "keywords": [
+    "github-action",
+    "actions",
+    "pull-request",
+    "code-review",
+    "vibe-check",
+    "pr-quality",
+    "ci",
+    "claude",
+    "anthropic"
+  ],
+  "author": "3243dwon",
+  "license": "MIT",
+  "homepage": "https://github.com/3243dwon/pr-vibe-check#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3243dwon/pr-vibe-check.git"
+  },
+  "bugs": {
+    "url": "https://github.com/3243dwon/pr-vibe-check/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.3"
+  }
+}

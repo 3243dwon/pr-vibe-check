@@ -1,0 +1,44 @@
+name: 'PR Vibe Check'
+description: 'Scores your pull request vibes (hygiene + optional AI read) and drops a playful score comment.'
+author: '3243dwon'
+branding:
+  icon: 'activity'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'Token used to read the PR and post the comment. Defaults to the workflow token.'
+    required: false
+    default: ${{ github.token }}
+  mode:
+    description: 'hygiene | ai | both. "hygiene" needs no API key; "ai"/"both" use Claude to read the diff.'
+    required: false
+    default: 'hygiene'
+  anthropic-api-key:
+    description: 'Anthropic API key. Required only when mode is "ai" or "both".'
+    required: false
+    default: ''
+  ai-model:
+    description: 'Claude model id used for the AI vibe read.'
+    required: false
+    default: 'claude-haiku-4-5-20251001'
+  fail-under:
+    description: 'If set (0-100), the action fails when the vibe score is below this number. Great for gating merges.'
+    required: false
+    default: ''
+  comment:
+    description: 'Whether to post/update a comment on the PR (true/false).'
+    required: false
+    default: 'true'
+
+outputs:
+  score:
+    description: 'The numeric vibe score (0-100).'
+  rating:
+    description: 'Human-readable vibe rating (e.g. "Solid vibes").'
+  emoji:
+    description: 'Emoji representing the vibe.'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

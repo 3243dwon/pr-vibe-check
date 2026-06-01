@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="PR Vibe Check — give every pull request a vibe score">
+  <defs>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#7C5CFC"/>
+    </linearGradient>
+    <linearGradient id="scale" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E5534B"/>
+      <stop offset="0.5" stop-color="#E3B341"/>
+      <stop offset="1" stop-color="#56D364"/>
+    </linearGradient>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="1280" height="640" fill="#15131C"/>
+  <rect width="1280" height="6" fill="url(#violet)"/>
+
+  <!-- ===== left column ===== -->
+  <!-- kicker -->
+  <rect x="84" y="84" width="14" height="14" rx="3" fill="url(#violet)"/>
+  <text x="108" y="96" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="18" letter-spacing="3" fill="#8E87A0">GITHUB ACTION</text>
+
+  <!-- sparkle flourish -->
+  <path d="M624 118 L631 139 L652 146 L631 153 L624 174 L617 153 L596 146 L617 139 Z" fill="url(#violet)" opacity="0.9"/>
+
+  <!-- headline -->
+  <text x="80" y="222" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="84" fill="#F4F0E6">PR Vibe Check</text>
+  <rect x="82" y="244" width="96" height="6" rx="3" fill="url(#violet)"/>
+
+  <!-- tagline -->
+  <text x="82" y="306" font-family="'Helvetica Neue', Arial, sans-serif" font-size="29" fill="#B9B3A6">Give every pull request a vibe score</text>
+  <text x="82" y="344" font-family="'Helvetica Neue', Arial, sans-serif" font-size="29" fill="#B9B3A6">— and know why.</text>
+
+  <!-- score scale -->
+  <text x="82" y="416" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" letter-spacing="2" fill="#6E6880">WHERE THIS PR LANDS</text>
+  <rect x="82" y="430" width="520" height="12" rx="6" fill="url(#scale)"/>
+  <path d="M560 446 L551 460 L569 460 Z" fill="#F4F0E6"/>
+  <text x="82" y="486" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#6E6880">0</text>
+  <text x="560" y="486" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15" fill="#F4F0E6">92</text>
+  <text x="602" y="486" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="14" fill="#6E6880">100</text>
+
+  <!-- footer -->
+  <rect x="82" y="582" width="12" height="12" rx="3" fill="url(#violet)"/>
+  <text x="104" y="592" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="17" fill="#6E6880">github.com/3243dwon/pr-vibe-check</text>
+
+  <!-- top-right meta -->
+  <text x="1196" y="96" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15" letter-spacing="1" fill="#6E6880">MIT · NODE 20 · @v1</text>
+
+  <!-- ===== right column: mock comment card ===== -->
+  <rect x="700" y="120" width="496" height="416" rx="18" fill="#1C1926" stroke="#2C2838" stroke-width="1"/>
+
+  <!-- card header -->
+  <circle cx="734" cy="162" r="6" fill="url(#violet)"/>
+  <text x="750" y="168" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="17" fill="#C9C3D6">PR Vibe Check</text>
+  <path d="M1158 150 L1163 162 L1175 167 L1163 172 L1158 184 L1153 172 L1141 167 L1153 162 Z" fill="url(#violet)" opacity="0.85"/>
+
+  <!-- score -->
+  <text x="732" y="252" font-family="Georgia, 'Times New Roman', serif" font-size="76" fill="#F4F0E6">92</text>
+  <text x="820" y="252" font-family="'Helvetica Neue', Arial, sans-serif" font-size="28" fill="#8E87A0">/ 100</text>
+  <text x="930" y="252" font-family="'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#A78BFA">Solid vibes</text>
+
+  <!-- meter (10 cells) -->
+  <g>
+    <rect x="732" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="774" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="816" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="858" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="900" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="942" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="984" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="1026" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="1068" y="284" width="34" height="16" rx="5" fill="url(#violet)"/>
+    <rect x="1110" y="284" width="34" height="16" rx="5" fill="none" stroke="#3A3550" stroke-width="1.5"/>
+  </g>
+
+  <!-- divider -->
+  <line x1="732" y1="332" x2="1164" y2="332" stroke="#2C2838" stroke-width="1.5" stroke-dasharray="2 6"/>
+
+  <!-- check rows -->
+  <g font-family="'Helvetica Neue', Arial, sans-serif" font-size="18">
+    <!-- Title: good -->
+    <circle cx="742" cy="368" r="9" fill="#56D364"/>
+    <path d="M737.5 368 l3 3 l5.5 -6" fill="none" stroke="#15131C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="762" y="374" fill="#C9C3D6">Title — clear and scannable</text>
+    <text x="1164" y="374" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15" fill="#8E87A0">20/20</text>
+
+    <!-- Tests: good -->
+    <circle cx="742" cy="406" r="9" fill="#56D364"/>
+    <path d="M737.5 406 l3 3 l5.5 -6" fill="none" stroke="#15131C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="762" y="412" fill="#C9C3D6">Tests — included</text>
+    <text x="1164" y="412" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15" fill="#8E87A0">15/15</text>
+
+    <!-- Size: warn -->
+    <circle cx="742" cy="444" r="9" fill="#E3B341"/>
+    <rect x="741" y="439" width="2" height="6" rx="1" fill="#15131C"/>
+    <rect x="741" y="447.5" width="2" height="2" rx="1" fill="#15131C"/>
+    <text x="762" y="450" fill="#C9C3D6">Size — getting chunky</text>
+    <text x="1164" y="450" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="15" fill="#8E87A0">14/20</text>
+  </g>
+
+  <!-- card footer -->
+  <text x="732" y="506" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#6E6880">One self-updating comment per pull request.</text>
+</svg>

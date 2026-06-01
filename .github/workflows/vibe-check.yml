@@ -1,0 +1,22 @@
+name: Vibe Check
+
+# Dogfooding: pr-vibe-check vibe-checks its own pull requests.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  vibe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Use the local action while developing; switch to 3243dwon/pr-vibe-check@v1 in other repos.
+      - uses: ./
+        with:
+          mode: hygiene
+          # mode: both
+          # anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
